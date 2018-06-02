@@ -5,12 +5,14 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
+	"os/exec"
+	"strconv"
 	"time"
 )
 
 var settings = make(map[string]string)
 var worker PFC_settings
-
+var tickerCam, tickerSensors *time.Ticker
 var hum float64
 var temp float64
 
@@ -46,6 +48,15 @@ func doHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("Pump off")
 	} else if params.Path == "/do/takePhoto" {
 		fmt.Println("Photo")
+		exec.Command("/bin/sh", "-c", "sudo rm /home/pi/go_exp/img.jpg").CombinedOutput()
+
+		if tryTakePhoto(true) == false {
+			if tryTakePhoto(true) == false {
+				if tryTakePhoto(true) == false {
+					tryTakePhoto(true)
+				}
+			}
+		}
 	}
 
 }
@@ -66,6 +77,8 @@ func saveHandler(w http.ResponseWriter, r *http.Request) {
 	saveSettings(&jsonString, "settings.txt")
 	settings = parameters
 
+	worker.makeFromMap(settings)
+
 	text := `<html><head><title>ok</title></head><body>
 	<script type="text/javascript">   
 	function Redirect() { window.location="/edit/"; } 
@@ -77,12 +90,58 @@ func saveHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, text)
 }
 
+func tryTakePhoto(prv bool) bool {
+	var timer *time.Timer
+	fmt.Println("Cam try capture")
+	dir, err := GetTargetPathByDate()
+	if err == nil {
+		flagDelay := false
+		go func() {
+			<-timer.C
+			flagDelay = true
+		}()
+		timer = time.NewTimer(time.Millisecond * 990)
+
+		if prv == true {
+			exec.Command("/bin/sh", "-c", "sudo fswebcam -r 960x720 --jpeg 90 -D 1 /home/pi/go_exp/img.jpg").CombinedOutput()
+		} else {
+			exec.Command("/bin/sh", "-c", "sudo fswebcam -r 960x720 --jpeg 90 -D 1 "+dir+GenerateStringByCurrentTime()+".jpg").CombinedOutput()
+		}
+		timer.Stop()
+		time.Sleep(time.Millisecond * 1500)
+
+		return flagDelay
+	}
+	return false
+}
+
+func camCapture() {
+	for range tickerCam.C {
+		if tryTakePhoto(false) == false {
+			if tryTakePhoto(false) == false {
+				if tryTakePhoto(false) == false {
+					tryTakePhoto(false)
+				}
+			}
+		}
+	}
+}
+
+func writeSensorsToLog() {
+	for range tickerSensors.C {
+		dir, _ := GetTargetPathByDate()
+		AppendLineToLog(dir+"sensors.log", GenerateTimestamp()+" t "+strconv.FormatFloat(temp, 'f', 2, 64)+" h "+strconv.FormatFloat(hum, 'f', 2, 64)+"\r\n")
+	}
+}
+
 func handlePeriphStates() {
 	var h, t float64
+	var dir string
 
 	fmt.Println("handlePeriphStates started")
 
 	for true {
+		dir, _ = GetTargetPathByDate()
 		h, t = periph.ReadHumTempSensor()
 		worker.UpdateFlags(h, t)
 		// Add Lock
@@ -91,8 +150,17 @@ func handlePeriphStates() {
 		periph.SetLightState(worker.GetTargetLightState())
 		periph.SetPumpState(worker.GetTargetPumpState())
 		periph.SetFanState(worker.GetTargetFanState())
+		if worker.ReadLightSwitchedFlag() {
+			AppendLineToLog(dir+"switchings.log", GenerateTimestamp()+" LightEnabled -> "+BoolToString(worker.GetTargetLightState())+"\r\n")
+		}
+		if worker.ReadPumpSwitchedFlag() {
+			AppendLineToLog(dir+"switchings.log", GenerateTimestamp()+" PumpEnabled  -> "+BoolToString(worker.GetTargetPumpState())+"\r\n")
+		}
+		if worker.ReadFanSwitchedFlag() {
+			AppendLineToLog(dir+"switchings.log", GenerateTimestamp()+" FanEnabled   -> "+BoolToString(worker.GetTargetFanState())+"\r\n")
+		}
 
-		time.Sleep(time.Millisecond * 1000)
+		time.Sleep(time.Millisecond * 500)
 	}
 }
 
@@ -111,7 +179,15 @@ func main() {
 		json.Unmarshal(tmp, &settings)
 	}
 
+	periph.InitGpio()
+
 	go handlePeriphStates()
+
+	tickerCam = time.NewTicker(30 * time.Minute)
+	go camCapture()
+
+	tickerSensors = time.NewTicker(1 * time.Minute)
+	go writeSensorsToLog()
 
 	fmt.Println(settings)
 	http.HandleFunc("/do/", doHandler)

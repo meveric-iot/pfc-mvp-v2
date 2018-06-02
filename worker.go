@@ -25,6 +25,9 @@ type PFC_settings struct {
 	fPumpEnabled,
 	fFanOn bool
 	pumpNextTime int64
+	fLightSwitched,
+	fPumpSwitched,
+	fFanSwitched bool
 }
 
 func strToHHMMss(str string) time.Time {
@@ -47,9 +50,15 @@ func (s *PFC_settings) makeFromMap(cfg map[string]string) {
 
 	s.pump_on_time = uint32(t1.Hour()*3600 + t1.Minute()*60 + t1.Second())
 	s.pump_pause_time = uint32(t2.Hour()*3600 + t2.Minute()*60 + t2.Second())
+	s.pumpNextTime = 0
+	s.fPumpEnabled = false
 
 	s.light_on_time = strToHHMMss(cfg["light_on_time"])
 	s.light_off_time = strToHHMMss(cfg["light_off_time"])
+
+	s.fLightSwitched = false
+	s.fPumpSwitched = false
+	s.fFanSwitched = false
 }
 
 func (s *PFC_settings) GetTargetLightState() bool {
@@ -66,17 +75,50 @@ func (s *PFC_settings) GetTargetFanState() bool {
 
 func (s *PFC_settings) SetLightStateManual(state bool) {
 	s.restartMModeTimer()
+	if s.fLightOn != state {
+		s.fLightSwitched = true
+	}
 	s.fLightOn = state
 }
 
 func (s *PFC_settings) SetPumpStateManual(state bool) {
 	s.restartMModeTimer()
+	if s.fPumpOn != state {
+		s.fPumpSwitched = true
+	}
 	s.fPumpOn = state
 }
 
 func (s *PFC_settings) SetFanStateManual(state bool) {
 	s.restartMModeTimer()
+	if s.fFanOn != state {
+		s.fFanSwitched = true
+	}
 	s.fFanOn = state
+}
+
+func (s *PFC_settings) ReadLightSwitchedFlag() bool {
+	if s.fLightSwitched == true {
+		s.fLightSwitched = false
+		return true
+	}
+	return false
+}
+
+func (s *PFC_settings) ReadPumpSwitchedFlag() bool {
+	if s.fPumpSwitched == true {
+		s.fPumpSwitched = false
+		return true
+	}
+	return false
+}
+
+func (s *PFC_settings) ReadFanSwitchedFlag() bool {
+	if s.fFanSwitched == true {
+		s.fFanSwitched = false
+		return true
+	}
+	return false
 }
 
 func (s *PFC_settings) restartMModeTimer() {
@@ -106,8 +148,14 @@ func (s *PFC_settings) UpdateFlags(h, t float64) {
 	if fMM == false {
 		invert := light_from_sec < light_to_sec                                     // at example, (07:00 < 22:00) => invert = true
 		if sec_from_midnight > light_from_sec && sec_from_midnight < light_to_sec { // sec_from_midnight between _from and _to
+			if s.fLightOn != invert {
+				s.fLightSwitched = true
+			}
 			s.fLightOn = invert
 		} else {
+			if s.fLightOn != !invert {
+				s.fLightSwitched = true
+			}
 			s.fLightOn = !invert
 		}
 
@@ -118,10 +166,12 @@ func (s *PFC_settings) UpdateFlags(h, t float64) {
 		} else {
 			if time_now.Unix() >= s.pumpNextTime {
 				if s.fPumpEnabled {
+					s.fPumpSwitched = true
 					s.fPumpEnabled = false
 					s.pumpNextTime = time_now.Unix() + int64(s.pump_pause_time)
 					s.fPumpOn = false
 				} else {
+					s.fPumpSwitched = true
 					s.fPumpEnabled = true
 					s.pumpNextTime = time_now.Unix() + int64(s.pump_on_time)
 					s.fPumpOn = true
@@ -130,8 +180,14 @@ func (s *PFC_settings) UpdateFlags(h, t float64) {
 		}
 
 		if t > s.temperature_threshold {
+			if s.fFanOn != true {
+				s.fFanSwitched = true
+			}
 			s.fFanOn = true
 		} else {
+			if s.fFanOn != false {
+				s.fFanSwitched = true
+			}
 			s.fFanOn = false
 		}
 	}
