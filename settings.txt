@@ -1,0 +1,1 @@
+{"ap_pass":"123456780000","ap_ssid":"PFC V1.0 by Meveric","light_off_time":"21:00:00","light_on_time":"07:00:00","pass":"","pump_on_time":"00:05:00","pump_pause_time":"00:15:00","ssid":"sopl","temperature_threshold":"22.0"}

@@ -1,0 +1,5 @@
+source-directory /etc/network/interfaces.d
+auto wlan0
+iface wlan0 inet dhcp
+  wpa-ssid "bbc"
+  wpa-psk "12345678"

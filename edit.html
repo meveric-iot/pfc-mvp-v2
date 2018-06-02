@@ -1,0 +1,96 @@
+<html> 
+<head>
+</head>
+<body>  
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+        <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+        <script type="text/javascript">   
+            var time = 0;
+            var timer = 0;
+            function DecTime() { 
+                if (time > 0) {
+                    time--;
+                    document.getElementById("clockdiv").innerHTML = 'До возвращения в автоматический режим: ' + time + ' сек';
+                }
+                else {
+                    document.getElementById("clockdiv").innerHTML = '';
+                    clearInterval(timer);
+                    timer = 0;
+                }
+            }
+
+            function restartCountdown(seconds) { 
+                if (timer != 0) { 
+                    clearInterval(timer); 
+                } 
+                time = seconds;  
+                document.getElementById("clockdiv").innerHTML = 'До возвращения в автоматический режим: ' + time + ' сек';
+                timer = setInterval(function() { 
+                    DecTime(); 
+                }, 1000); 
+            } 
+
+            function sendRequest(request) {
+                $.get("/do/"+request, {}, function(result) {
+                    restartCountdown(result);
+                });
+            }
+            function setLightOn() { sendRequest("setLightOn"); } 
+            function setLightOff() { sendRequest("setLightOff"); } 
+            function setPumpOn() { sendRequest("setPumpOn"); } 
+            function setPumpOff() { sendRequest("setPumpOff"); } 
+            function setFanOn() { sendRequest("setFanOn"); } 
+            function setFanOff() { sendRequest("setFanOff"); } 
+            function takePhoto() { $.get("/do/takePhoto", {}, function(result) {}); } 
+        </script>
+
+<h1>PFC MVP</h1>
+
+<div id="settings">
+<form action="/save/" method="POST">
+<label><b>Параметры выращивания</b></label>
+<p><label>Начало светового дня</label><input type="text" name="light_on_time" maxlength="8" value="{{.light_on_time}}"></p>
+<p><label>Конец светового дня</label><input type="text" name="light_off_time" maxlength="8" value="{{.light_off_time}}"></p>
+<p><label>Температура включения вентилятора</label><input type="text" name="temperature_threshold" maxlength="4" value="{{.temperature_threshold}}"></p>
+<p><label>Продолжительность работы насоса</label><input type="text" name="pump_on_time" maxlength="8" value="{{.pump_on_time}}"></p>
+<p><label>Продолжительность паузы</label><input type="text" name="pump_pause_time" maxlength="8" value="{{.pump_pause_time}}"></p>
+
+<label><b>Параметры WiFi сети</b></label>
+<p><label>SSID</label><input type="text" name="ssid" maxlength="32" value="{{.ssid}}"></p>
+<p><label>Пароль</label><input type="text" name="pass" maxlength="32" value="{{.pass}}"></p>
+
+<label><b>Параметры точки доступа WiFi (если нет подключения к WiFi сети)</b></label>
+<p><label>SSID</label><input type="text" name="ap_ssid" maxlength="32" value="{{.ap_ssid}}"></p>
+<p><label>Пароль</label><input type="text" name="ap_pass" maxlength="32" value="{{.ap_pass}}"></p>
+
+<div><input type="submit" value="Save"></div>
+</form>
+</div>
+
+<div>
+    <label><b>Ручное управление</b> <div id="clockdiv"></div></label>
+
+    <button onClick="setLightOn()">Включить свет</button>
+    <button onClick="setLightOff()">Выключить свет</button>
+    <button onClick="setPumpOn()">Включить насос</button>
+    <button onClick="setPumpOff()">Выключить насос</button>
+    <button onClick="setFanOn()">Включить вентилятор</button>
+    <button onClick="setFanOff()">Выключить вентилятор</button>
+    <button onClick="takePhoto()">Сделать фото</button>
+</div>
+
+
+
+<div id="view">
+    <label><b>Фото</b></label>
+    <div></div>
+
+    <label><b>График температуры</b></label>
+    <div></div>
+
+    <label><b>График влажности</b></label>
+    <div></div>
+</div>
+
+</body>
+</html>
