@@ -25,7 +25,8 @@ function restartCountdown(seconds) {
 
 function sendRequestToMain(request) {
           $.get("/mainData/"+request, {}, function(result) {
-              restartCountdown(result);
+            //alert(result);
+            restartCountdown(result);
           });
 }
 
@@ -93,7 +94,7 @@ function saveGrowingSettings() {
     data: JSON.stringify(gSet),
     success: function () {
       hideAllPages();
-      document.getElementById("info_text").innerHTML = "<br><p><label>Настройки успешно сохранены</label></p>";
+      document.getElementById("info_text").innerHTML = "<br><div class='row'><div class='col'><p><label>Настройки успешно сохранены</label></p></div></div>";
       showPage("pageAreaInfo"); 
     }
   });
@@ -137,7 +138,7 @@ function saveSystemSettings() {
     data: JSON.stringify(gSet),
     success: function () {
       hideAllPages();
-      document.getElementById("info_text").innerHTML = "<br><p><label>Настройки успешно сохранены</label></p>";
+      document.getElementById("info_text").innerHTML = "<br><div class='row'><div class='col'><p><label>Настройки успешно сохранены</label></p></div></div>";
       showPage("pageAreaInfo"); 
     }
   });
