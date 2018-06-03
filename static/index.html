@@ -19,177 +19,6 @@
 </head>
 
 <body class="fixed-nav sticky-footer bg-dark" id="page-top" onLoad="initApp()">
-  <script type="text/javascript">   
-      var time = 0;
-      var timer = 0;
-      function DecTime() { 
-          if (time > 0) {
-              time--;
-              document.getElementById("clockdiv").innerHTML = 'До возвращения в автоматический режим: ' + time + ' сек';
-          }
-          else {
-              document.getElementById("clockdiv").innerHTML = '';
-              clearInterval(timer);
-              timer = 0;
-          }
-      }
-
-      function restartCountdown(seconds) { 
-          if (timer != 0) { 
-              clearInterval(timer); 
-          } 
-          time = seconds;  
-          document.getElementById("clockdiv").innerHTML = 'До возвращения в автоматический режим: ' + time + ' сек';
-          timer = setInterval(function() { 
-              DecTime(); 
-          }, 1000); 
-      } 
-
-      function sendRequestToMain(request) {
-                $.get("/mainData/"+request, {}, function(result) {
-                    restartCountdown(result);
-                });
-      }
-
-      function initApp() {
-        setInterval(function() {
-          loadMainStatus();
-        }, 1000);
-      }
-
-      function hideAllPages() {
-        document.getElementById("pageAreaMain").style.display = "none";
-        document.getElementById("pageAreaGrowing").style.display = "none";
-        document.getElementById("pageAreaSystem").style.display = "none";
-        document.getElementById("pageAreaInfo").style.display = "none";
-      }
-
-      function showPage(pagename) {
-        document.getElementById(pagename).style.display = "block";
-      }
-
-      function showMainPage() { 
-        hideAllPages();
-        showPage("pageAreaMain");
-      } 
-      function showGrowingSettingsPage() { 
-        hideAllPages();
-        showPage("pageAreaGrowing");
-      } 
-      function showSystemSettingsPage(){ 
-        hideAllPages();
-        showPage("pageAreaSystem");  
-      } 
-      function shutdownComputer() { sendRequestToMain("shutdown"); } 
-      function toggleLight() { sendRequestToMain("toggleLight"); } 
-      function togglePump() { sendRequestToMain("togglePump"); } 
-      function toggleFan() { sendRequestToMain("toggleFan"); } 
-
-      function saveGrowingSettings() {
-        var gSet = {
-          lighOnTime: document.getElementById("valLightOnTime").value,
-          lighOffTime: document.getElementById("valLightOffTime").value,
-          pumpOnTime: document.getElementById("valPumpOnTime").value,
-          pumpPauseTime: document.getElementById("valPumpPauseTime").value,
-          fanOnthreshold: document.getElementById("valFanOnthreshold").value
-        };
-        if (gSet.lighOnTime == "") {
-          gSet.lighOnTime = document.getElementById("valLightOnTime").placeholder;
-        }
-        if (gSet.lighOffTime == "") {
-          gSet.lighOffTime = document.getElementById("valLightOffTime").placeholder;
-        }
-        if (gSet.pumpOnTime == "") {
-          gSet.pumpOnTime = document.getElementById("valPumpOnTime").placeholder;
-        }
-        if (gSet.pumpPauseTime == "") {
-          gSet.pumpPauseTime = document.getElementById("valPumpPauseTime").placeholder;
-        }
-        if (gSet.fanOnthreshold == "") {
-          gSet.fanOnthreshold = document.getElementById("valFanOnthreshold").placeholder;
-        }
-        //alert(JSON.stringify(gSet));
-        $.ajax({
-          type : 'POST',
-          url: 'growingSettings',
-          data: JSON.stringify(gSet),
-          success: function () {
-            hideAllPages();
-            document.getElementById("info_text").innerHTML = "<br><p><label>Настройки успешно сохранены</label></p>";
-            showPage("pageAreaInfo"); 
-          }
-        });
-        /*$.post('/growingSettings', {data : JSON.stringify(gSet)}, function (data) {
-            alert(data); 
-        });*/
-      }
-
-      function loadGrowingSettings() {
-        $.get("growingSettings", {}, function(result) {
-          var data = JSON.parse(result);
-          document.getElementById("valLightOnTime").value = data.lighOnTime;
-          document.getElementById("valLightOffTime").value = data.lighOffTime;
-          document.getElementById("valPumpOnTime").value = data.pumpOnTime;
-          document.getElementById("valPumpPauseTime").value = data.pumpPauseTime;
-          document.getElementById("valFanOnthreshold").value = data.fanOnthreshold;
-          showGrowingSettingsPage();
-        });
-      }
-
-      function saveSystemSettings() {
-        var gSet = {
-          ssid: document.getElementById("valSsid").value,
-          pass: document.getElementById("valPass").value,
-          apName: document.getElementById("valAPName").value
-        };
-        if (gSet.ssid == "") {
-          gSet.ssid = document.getElementById("valSsid").placeholder;
-        }
-        if (gSet.pass == "") {
-          gSet.pass = document.getElementById("valPass").placeholder;
-        }
-        if (gSet.apName == "") {
-          gSet.apName = document.getElementById("valAPName").placeholder;
-        }
-        //alert(JSON.stringify(gSet));
-        $.ajax({
-          type : 'POST',
-          url: 'systemSettings',
-          data: JSON.stringify(gSet),
-          success: function () {
-            hideAllPages();
-            document.getElementById("info_text").innerHTML = "<br><p><label>Настройки успешно сохранены</label></p>";
-            showPage("pageAreaInfo"); 
-          }
-        });
-      }
-
-      function loadSystemSettings() {
-        $.get("systemSettings", {}, function(result) {
-          var data = JSON.parse(result);
-          document.getElementById("valSsid").value = data.ssid;
-          document.getElementById("valPass").value = data.pass;
-          document.getElementById("valAPName").value = data.apName;
-          showSystemSettingsPage();
-        });
-      }
-
-
-      function loadMainStatus() {
-        $.get("mainData", {}, function(result) {
-          var data = JSON.parse(result);
-          document.getElementById("temp_val").value = data.temp_val;
-          document.getElementById("hum_val").value = data.hum_val;
-          document.getElementById("light_state").value = data.light_state;
-          document.getElementById("pump_state").value = data.pump_state;
-          document.getElementById("fan_state").value = data.fan_state;
-        });
-      }
-
-      
-      
-      
-  </script>
   <!-- Navigation-->
   <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top" id="mainNav">
     <a class="navbar-brand" href="/">Personal Food Computer v1.0</a>
@@ -206,14 +35,14 @@
         </li>
         
         <li class="nav-item" data-toggle="tooltip" data-placement="right" title="growingSettings">
-          <a class="nav-link" onClick="showGrowingSettingsPage()">
+          <a class="nav-link" onClick="loadGrowingSettings()">
             <i class="fa fa-fw fa-table"></i>
             <span class="nav-link-text">Параметры роста</span>
           </a>
         </li>
 
         <li class="nav-item" data-toggle="tooltip" data-placement="right" title="systemSettings">
-          <a class="nav-link" onClick="showSystemSettingsPage()">
+          <a class="nav-link" onClick="loadSystemSettings()">
             <i class="fa fa-fw fa-wrench"></i>
             <span class="nav-link-text">Система</span>
           </a>
@@ -248,18 +77,27 @@
                 <div class="card-header">
                   <i class="fa fa-area-chart"></i>Состояние системы</div>
                 <div class="card-body">
-                    <button class="btn btn-primary" onClick="toggleLight()" id="toggleLightBtn">Переключить свет</button>
-                    <button class="btn btn-primary" onClick="togglePump()">Переключить насос</button>
-                    <button class="btn btn-primary" onClick="toggleFan()">Переключить вентилятор</button>
-                    <button class="btn btn-primary" onClick="updatePhoto()">Обновить фото</button> <hr>
+                    <div class="row">
+                      <div class="col"><button class="btn-block" width=400 onClick="toggleLight()" id="toggleLightBtn">свет on/off</button></div>
+                      <div class="col"><button class="btn-block" onClick="togglePump()">насос on/off</button></div>
+                      <div class="col"><button class="btn-block" onClick="toggleFan()">вентилятор on/off</button></div>
+                      <div class="col"><button class="btn-block" onClick="updatePhoto()">новое фото</button></div>
+                    </div><hr>
                     <div id="system_info">
                       <div class="row">
-                        Температура: <label id="temp_val">20</label>*C             
-                        , влажность: <label id="hum_val">20</label>%; свет: <label id="light_state"> включен</label>, насос: <label id="pump_state"> включен</label>, вентилятор: <label id="fan_state">включен</label> 
+                          <div class="col">температура: <label id="temp_val">20</label>*С</div>             
+                          <div class="col">влажность: <label id="hum_val">20</label>%</div> 
                       </div>
-                      <div id="clockdiv">
-                        
+                      <div class="row">
+                          <div class="col">вентилятор: <label id="fan_state">включен</label></div>  
+                          <div class="col">насос: <label id="pump_state">включен</label></div> 
                       </div>
+                      <div class="row">
+                          <div class="col">cвет: <label id="light_state">включен</label></div>
+                          <div class="col"></div>
+                      </div>
+                       
+                      <div id="clockdiv"></div>
                     </div>
                 </div>
               </div>
@@ -317,29 +155,29 @@
                     <form>
                       <div class="form-row">
                           <div class="col-md-6">
-                            <label for="exampleInputName">Начало светового дня</label>
+                            <label>Начало светового дня</label>
                             <input class="form-control" id="valLightOnTime" type="text" placeholder="06:00:00">
                           </div>
                           <div class="col-md-6">
-                            <label for="exampleInputLastName">Конец светового дня</label>
+                            <label>Конец светового дня</label>
                             <input class="form-control" id="valLightOffTime" type="text" placeholder="20:00:00">
                           </div>
                         </div>  
                         <br>
                         <div class="form-row">
                             <div class="col-md-6">
-                              <label for="exampleInputName">Продолжительность работы насоса</label>
+                              <label>Продолжительность работы насоса</label>
                               <input class="form-control" id="valPumpOnTime" type="text" placeholder="00:10:00">
                             </div>
                             <div class="col-md-6">
-                              <label for="exampleInputLastName">Продолжительность паузы насоса</label>
+                              <label>Продолжительность паузы насоса</label>
                               <input class="form-control" id="valPumpPauseTime" type="text" placeholder="00:40:00">
                             </div>
                           </div>  
                           <br>
                           <div class="form-group">
-                              <label for="exampleInputEmail1">Температура включения вентилятора</label>
-                              <input class="form-control" id="valFanOnthreshold" type="text" placeholder="22.0">
+                              <label>Температура включения вентилятора</label>
+                              <input class="form-control" id="valFanOnThreshold" type="text" placeholder="22.0">
                           </div>
                       </form>
                       <button class="btn btn-primary" onClick="saveGrowingSettings()">Сохранить</button>
@@ -362,11 +200,11 @@
                 <form>
                   <div class="form-row">
                       <div class="col-md-6">
-                        <label for="exampleInputName">Имя Wi-Fi сети</label>
+                        <label>Имя Wi-Fi сети</label>
                         <input class="form-control" id="valSsid" type="text" placeholder="school1-ee">
                       </div>
                       <div class="col-md-6">
-                        <label for="exampleInputLastName">Пароль сети</label>
+                        <label>Пароль сети</label>
                         <input class="form-control" id="valPass" type="password" placeholder="pass">
                       </div>
                     </div>  
@@ -455,6 +293,7 @@
     <!-- Custom scripts for this page-->
     <script src="js/sb-admin-datatables.min.js"></script>
     <script src="js/sb-admin-charts.min.js"></script>
+    <script src="js/index.js"></script>
   </div>
 </body>
 

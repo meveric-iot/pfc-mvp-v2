@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"html/template"
+	"io/ioutil"
 	"net/http"
 	"os/exec"
 	"strconv"
@@ -165,6 +166,75 @@ func handlePeriphStates() {
 	}
 }
 
+func mainDataHandler(w http.ResponseWriter, r *http.Request) {
+
+}
+
+func growingSettingsHandler(w http.ResponseWriter, r *http.Request) {
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return
+	}
+	if len(body) == 0 { // empty request, return settings in JSON
+		fmt.Println("nothing")
+		parameters := make(map[string]string)
+		parameters["valLightOnTime"] = settings["light_on_time"]
+		parameters["valLightOffTime"] = settings["light_off_time"]
+		parameters["valPumpPauseTime"] = settings["pump_pause_time"]
+		parameters["valPumpOnTime"] = settings["pump_on_time"]
+		parameters["valFanOnThreshold"] = settings["temperature_threshold"]
+		jsonString, _ := json.Marshal(parameters)
+		fmt.Fprint(w, string(jsonString))
+		return
+	}
+	fmt.Println(body)
+	var t map[string]string
+	err = json.Unmarshal(body, &t)
+	if err != nil {
+		return
+	}
+	settings["light_on_time"] = t["valLightOnTime"]
+	settings["light_off_time"] = t["valLightOffTime"]
+	settings["pump_on_time"] = t["valPumpOnTime"]
+	settings["pump_pause_time"] = t["valPumpPauseTime"]
+	settings["temperature_threshold"] = t["valFanOnThreshold"]
+
+	jsonString, _ := json.Marshal(settings)
+	worker.makeFromMap(settings)
+	saveSettings(&jsonString, "settings.txt")
+
+}
+
+func systemSettingsHandler(w http.ResponseWriter, r *http.Request) {
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return
+	}
+	if len(body) == 0 { // empty request, return settings in JSON
+		fmt.Println("nothing")
+		parameters := make(map[string]string)
+		parameters["valSsid"] = settings["ssid"]
+		parameters["valAPName"] = settings["ap_ssid"]
+		parameters["valPass"] = settings["pass"]
+		jsonString, _ := json.Marshal(parameters)
+		fmt.Fprint(w, string(jsonString))
+		return
+	}
+	var t map[string]string
+	err = json.Unmarshal(body, &t)
+	if err != nil {
+		return
+	}
+
+	settings["ssid"] = t["valSsid"]
+	settings["ap_ssid"] = t["valAPName"]
+	settings["pass"] = t["valPass"]
+
+	jsonString, _ := json.Marshal(settings)
+	worker.makeFromMap(settings)
+	saveSettings(&jsonString, "settings.txt")
+}
+
 func main() {
 	var tmp []byte
 
@@ -202,11 +272,10 @@ func main() {
 	http.Handle("/data/", http.StripPrefix("/data/", http.FileServer(http.Dir("./out"))))
 
 	http.Handle("/", http.StripPrefix("/", http.FileServer(http.Dir("./static"))))
-	/*uploads := noDirListing(http.FileServer(http.Dir("./public/uploads")))
-	http.Handle("/uploads/", http.StripPrefix("/uploads/", uploads))*/
 
-	fmt.Println(settings)
-	http.HandleFunc("/do/", doHandler)
+	http.HandleFunc("/mainData", mainDataHandler)
+	http.HandleFunc("/growingSettings", growingSettingsHandler)
+	http.HandleFunc("/systemSettings", systemSettingsHandler)
 
 	worker.makeFromMap(settings)
 
