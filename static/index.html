@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="">
+  <meta name="author" content="">
+  <title>SB Admin - Start Bootstrap Template</title>
+  <!-- Bootstrap core CSS-->
+  <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Custom fonts for this template-->
+  <link href="vendor/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+  <!-- Page level plugin CSS-->
+  <link href="vendor/datatables/dataTables.bootstrap4.css" rel="stylesheet">
+  <!-- Custom styles for this template-->
+  <link href="css/sb-admin.css" rel="stylesheet">
+</head>
+
+<body class="fixed-nav sticky-footer bg-dark" id="page-top" onLoad="initApp()">
+  <script type="text/javascript">   
+      var time = 0;
+      var timer = 0;
+      function DecTime() { 
+          if (time > 0) {
+              time--;
+              document.getElementById("clockdiv").innerHTML = 'До возвращения в автоматический режим: ' + time + ' сек';
+          }
+          else {
+              document.getElementById("clockdiv").innerHTML = '';
+              clearInterval(timer);
+              timer = 0;
+          }
+      }
+
+      function restartCountdown(seconds) { 
+          if (timer != 0) { 
+              clearInterval(timer); 
+          } 
+          time = seconds;  
+          document.getElementById("clockdiv").innerHTML = 'До возвращения в автоматический режим: ' + time + ' сек';
+          timer = setInterval(function() { 
+              DecTime(); 
+          }, 1000); 
+      } 
+
+      function sendRequestToMain(request) {
+                $.get("/mainData/"+request, {}, function(result) {
+                    restartCountdown(result);
+                });
+      }
+
+      function initApp() {
+        setInterval(function() {
+          loadMainStatus();
+        }, 1000);
+      }
+
+      function hideAllPages() {
+        document.getElementById("pageAreaMain").style.display = "none";
+        document.getElementById("pageAreaGrowing").style.display = "none";
+        document.getElementById("pageAreaSystem").style.display = "none";
+        document.getElementById("pageAreaInfo").style.display = "none";
+      }
+
+      function showPage(pagename) {
+        document.getElementById(pagename).style.display = "block";
+      }
+
+      function showMainPage() { 
+        hideAllPages();
+        showPage("pageAreaMain");
+      } 
+      function showGrowingSettingsPage() { 
+        hideAllPages();
+        showPage("pageAreaGrowing");
+      } 
+      function showSystemSettingsPage(){ 
+        hideAllPages();
+        showPage("pageAreaSystem");  
+      } 
+      function shutdownComputer() { sendRequestToMain("shutdown"); } 
+      function toggleLight() { sendRequestToMain("toggleLight"); } 
+      function togglePump() { sendRequestToMain("togglePump"); } 
+      function toggleFan() { sendRequestToMain("toggleFan"); } 
+
+      function saveGrowingSettings() {
+        var gSet = {
+          lighOnTime: document.getElementById("valLightOnTime").value,
+          lighOffTime: document.getElementById("valLightOffTime").value,
+          pumpOnTime: document.getElementById("valPumpOnTime").value,
+          pumpPauseTime: document.getElementById("valPumpPauseTime").value,
+          fanOnthreshold: document.getElementById("valFanOnthreshold").value
+        };
+        if (gSet.lighOnTime == "") {
+          gSet.lighOnTime = document.getElementById("valLightOnTime").placeholder;
+        }
+        if (gSet.lighOffTime == "") {
+          gSet.lighOffTime = document.getElementById("valLightOffTime").placeholder;
+        }
+        if (gSet.pumpOnTime == "") {
+          gSet.pumpOnTime = document.getElementById("valPumpOnTime").placeholder;
+        }
+        if (gSet.pumpPauseTime == "") {
+          gSet.pumpPauseTime = document.getElementById("valPumpPauseTime").placeholder;
+        }
+        if (gSet.fanOnthreshold == "") {
+          gSet.fanOnthreshold = document.getElementById("valFanOnthreshold").placeholder;
+        }
+        //alert(JSON.stringify(gSet));
+        $.ajax({
+          type : 'POST',
+          url: 'growingSettings',
+          data: JSON.stringify(gSet),
+          success: function () {
+            hideAllPages();
+            document.getElementById("info_text").innerHTML = "<br><p><label>Настройки успешно сохранены</label></p>";
+            showPage("pageAreaInfo"); 
+          }
+        });
+        /*$.post('/growingSettings', {data : JSON.stringify(gSet)}, function (data) {
+            alert(data); 
+        });*/
+      }
+
+      function loadGrowingSettings() {
+        $.get("growingSettings", {}, function(result) {
+          var data = JSON.parse(result);
+          document.getElementById("valLightOnTime").value = data.lighOnTime;
+          document.getElementById("valLightOffTime").value = data.lighOffTime;
+          document.getElementById("valPumpOnTime").value = data.pumpOnTime;
+          document.getElementById("valPumpPauseTime").value = data.pumpPauseTime;
+          document.getElementById("valFanOnthreshold").value = data.fanOnthreshold;
+          showGrowingSettingsPage();
+        });
+      }
+
+      function saveSystemSettings() {
+        var gSet = {
+          ssid: document.getElementById("valSsid").value,
+          pass: document.getElementById("valPass").value,
+          apName: document.getElementById("valAPName").value
+        };
+        if (gSet.ssid == "") {
+          gSet.ssid = document.getElementById("valSsid").placeholder;
+        }
+        if (gSet.pass == "") {
+          gSet.pass = document.getElementById("valPass").placeholder;
+        }
+        if (gSet.apName == "") {
+          gSet.apName = document.getElementById("valAPName").placeholder;
+        }
+        //alert(JSON.stringify(gSet));
+        $.ajax({
+          type : 'POST',
+          url: 'systemSettings',
+          data: JSON.stringify(gSet),
+          success: function () {
+            hideAllPages();
+            document.getElementById("info_text").innerHTML = "<br><p><label>Настройки успешно сохранены</label></p>";
+            showPage("pageAreaInfo"); 
+          }
+        });
+      }
+
+      function loadSystemSettings() {
+        $.get("systemSettings", {}, function(result) {
+          var data = JSON.parse(result);
+          document.getElementById("valSsid").value = data.ssid;
+          document.getElementById("valPass").value = data.pass;
+          document.getElementById("valAPName").value = data.apName;
+          showSystemSettingsPage();
+        });
+      }
+
+
+      function loadMainStatus() {
+        $.get("mainData", {}, function(result) {
+          var data = JSON.parse(result);
+          document.getElementById("temp_val").value = data.temp_val;
+          document.getElementById("hum_val").value = data.hum_val;
+          document.getElementById("light_state").value = data.light_state;
+          document.getElementById("pump_state").value = data.pump_state;
+          document.getElementById("fan_state").value = data.fan_state;
+        });
+      }
+
+      
+      
+      
+  </script>
+  <!-- Navigation-->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top" id="mainNav">
+    <a class="navbar-brand" href="/">Personal Food Computer v1.0</a>
+    <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarResponsive">
+      <ul class="navbar-nav navbar-sidenav" id="exampleAccordion">
+        <li class="nav-item" data-toggle="tooltip" data-placement="right" title="Dashboard">
+          <a class="nav-link" onClick="showMainPage()">
+            <i class="fa fa-fw fa-dashboard"></i>
+            <span class="nav-link-text">Главная</span>
+          </a>
+        </li>
+        
+        <li class="nav-item" data-toggle="tooltip" data-placement="right" title="growingSettings">
+          <a class="nav-link" onClick="showGrowingSettingsPage()">
+            <i class="fa fa-fw fa-table"></i>
+            <span class="nav-link-text">Параметры роста</span>
+          </a>
+        </li>
+
+        <li class="nav-item" data-toggle="tooltip" data-placement="right" title="systemSettings">
+          <a class="nav-link" onClick="showSystemSettingsPage()">
+            <i class="fa fa-fw fa-wrench"></i>
+            <span class="nav-link-text">Система</span>
+          </a>
+        </li>
+
+
+        
+      </ul>
+      <ul class="navbar-nav sidenav-toggler">
+        <li class="nav-item">
+          <a class="nav-link text-center" id="sidenavToggler">
+            <i class="fa fa-fw fa-angle-left"></i>
+          </a>
+        </li>
+      </ul>
+      <ul class="navbar-nav ml-auto">
+        <li class="nav-item">
+          <a class="nav-link" data-toggle="modal" onClick="shutdownComputer()">
+            <i class="fa fa-fw fa-sign-out"></i>Выключить Food Computer</a>
+        </li>
+      </ul>
+    </div>
+  </nav>
+  <div class="content-wrapper">
+
+    <!-- Main Page Container -->
+    <div class="container-fluid"  id="pageAreaMain" style="display: block">
+      
+      <div class="row">
+          <div class="col-lg-12">
+              <div class="card mb-3">
+                <div class="card-header">
+                  <i class="fa fa-area-chart"></i>Состояние системы</div>
+                <div class="card-body">
+                    <button class="btn btn-primary" onClick="toggleLight()" id="toggleLightBtn">Переключить свет</button>
+                    <button class="btn btn-primary" onClick="togglePump()">Переключить насос</button>
+                    <button class="btn btn-primary" onClick="toggleFan()">Переключить вентилятор</button>
+                    <button class="btn btn-primary" onClick="updatePhoto()">Обновить фото</button> <hr>
+                    <div id="system_info">
+                      <div class="row">
+                        Температура: <label id="temp_val">20</label>*C             
+                        , влажность: <label id="hum_val">20</label>%; свет: <label id="light_state"> включен</label>, насос: <label id="pump_state"> включен</label>, вентилятор: <label id="fan_state">включен</label> 
+                      </div>
+                      <div id="clockdiv">
+                        
+                      </div>
+                    </div>
+                </div>
+              </div>
+          </div>
+      </div>
+
+      <div class="row">
+          <div class="col-lg-12">
+              <div class="card mb-3">
+                <div class="card-header">
+                  <i class="fa fa-area-chart"></i>Камера</div>
+                <div class="card-body">
+                  
+                </div>
+              </div>
+          </div>
+      </div>
+
+      <!-- Area Chart Example-->
+      <div class="row">
+        <div class="col-lg-6">
+          <div class="card mb-3">
+            <div class="card-header">
+              <i class="fa fa-area-chart"></i> График температуры</div>
+            <div class="card-body">
+              <canvas id="myAreaChart" width="100%" height="50"></canvas>
+            </div>
+          </div>
+          </div>
+
+          <div class="col-lg-6">
+              <div class="card mb-3">
+                  <div class="card-header">
+                    <i class="fa fa-area-chart"></i> График влажности</div>
+                  <div class="card-body">
+                    <canvas id="myAreaChart" width="100%" height="50"></canvas>
+                  </div>
+              </div>
+          </div>
+
+      </div>
+
+     </div>  <!-- /.container-fluid MainPage-->
+
+
+
+    <!-- GrowingSettings Page Container -->
+    <div class="container-fluid"  id="pageAreaGrowing" style="display: none">
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="card mb-3">
+                  <div class="card-header">
+                    <i class="fa "></i>Настройки выращивания</div>
+                  <div class="card-body">
+                    <form>
+                      <div class="form-row">
+                          <div class="col-md-6">
+                            <label for="exampleInputName">Начало светового дня</label>
+                            <input class="form-control" id="valLightOnTime" type="text" placeholder="06:00:00">
+                          </div>
+                          <div class="col-md-6">
+                            <label for="exampleInputLastName">Конец светового дня</label>
+                            <input class="form-control" id="valLightOffTime" type="text" placeholder="20:00:00">
+                          </div>
+                        </div>  
+                        <br>
+                        <div class="form-row">
+                            <div class="col-md-6">
+                              <label for="exampleInputName">Продолжительность работы насоса</label>
+                              <input class="form-control" id="valPumpOnTime" type="text" placeholder="00:10:00">
+                            </div>
+                            <div class="col-md-6">
+                              <label for="exampleInputLastName">Продолжительность паузы насоса</label>
+                              <input class="form-control" id="valPumpPauseTime" type="text" placeholder="00:40:00">
+                            </div>
+                          </div>  
+                          <br>
+                          <div class="form-group">
+                              <label for="exampleInputEmail1">Температура включения вентилятора</label>
+                              <input class="form-control" id="valFanOnthreshold" type="text" placeholder="22.0">
+                          </div>
+                      </form>
+                      <button class="btn btn-primary" onClick="saveGrowingSettings()">Сохранить</button>
+                  </div>
+                </div>
+            </div>
+          </div>
+  
+       </div>  <!-- /.container-fluid GrowingSettings-->
+
+
+<!-- SystemSettings Page Container -->
+<div class="container-fluid"  id="pageAreaSystem" style="display: none">
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card mb-3">
+              <div class="card-header">
+                <i class="fa"></i>Системные настройки</div>
+              <div class="card-body">
+                <form>
+                  <div class="form-row">
+                      <div class="col-md-6">
+                        <label for="exampleInputName">Имя Wi-Fi сети</label>
+                        <input class="form-control" id="valSsid" type="text" placeholder="school1-ee">
+                      </div>
+                      <div class="col-md-6">
+                        <label for="exampleInputLastName">Пароль сети</label>
+                        <input class="form-control" id="valPass" type="password" placeholder="pass">
+                      </div>
+                    </div>  
+
+                      <br>
+                      <div class="form-group">
+                          <label>Имя PFC</label>
+                          <input class="form-control" id="valAPName" type="text" placeholder="PFC MVP v1.0">
+                        </div>
+                  </form>
+                  <button class="btn btn-primary" onClick="saveSystemSettings()">Сохранить</button>
+
+
+              </div>
+            </div>
+        </div>
+      </div>
+
+   </div>  <!-- /.container-fluid SystemSettings-->
+
+
+
+   <!-- pageAreaInfo Page Container -->
+<div class="container-fluid"  id="pageAreaInfo" style="display: none">
+  <div class="row">
+      <div class="col-lg-12">
+          <div class="card mb-3">
+            <div class="card-header">
+              <i class="fa"></i>Информация</div>
+            <div id="info_text">
+              Настройки успешно сохранены
+            </div>
+          </div>
+      </div>
+    </div>
+
+ </div>  <!-- /.container-fluid pageAreaInfo-->
+
+
+
+
+
+    </div> <!-- /.content-wrapper-->
+    
+    
+    <footer class="sticky-footer">
+      <div class="container">
+        <div class="text-center">
+          <small>Meveric team & MIT © Moscow 2018</small>
+        </div>
+      </div>
+    </footer>
+    <!-- Scroll to Top Button-->
+    <a class="scroll-to-top rounded" href="#page-top">
+      <i class="fa fa-angle-up"></i>
+    </a>
+    <!-- Logout Modal-->
+    <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="exampleModalLabel">Ready to Leave?</h5>
+            <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">×</span>
+            </button>
+          </div>
+          <div class="modal-body">Select "Logout" below if you are ready to end your current session.</div>
+          <div class="modal-footer">
+            <button class="btn btn-secondary" type="button" data-dismiss="modal">Cancel</button>
+            <a class="btn btn-primary" href="login.html">Logout</a>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Bootstrap core JavaScript-->
+    <script src="vendor/jquery/jquery.min.js"></script>
+    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <!-- Core plugin JavaScript-->
+    <script src="vendor/jquery-easing/jquery.easing.min.js"></script>
+    <!-- Page level plugin JavaScript-->
+    <script src="vendor/chart.js/Chart.min.js"></script>
+    <script src="vendor/datatables/jquery.dataTables.js"></script>
+    <script src="vendor/datatables/dataTables.bootstrap4.js"></script>
+    <!-- Custom scripts for all pages-->
+    <script src="js/sb-admin.min.js"></script>
+    <!-- Custom scripts for this page-->
+    <script src="js/sb-admin-datatables.min.js"></script>
+    <script src="js/sb-admin-charts.min.js"></script>
+  </div>
+</body>
+
+</html>

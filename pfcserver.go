@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os/exec"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -189,6 +190,21 @@ func main() {
 	tickerSensors = time.NewTicker(1 * time.Minute)
 	go writeSensorsToLog()
 
+	css := noDirListing(http.FileServer(http.Dir("./static/css")))
+	http.Handle("/css/", http.StripPrefix("/css/", css))
+
+	vendor := noDirListing(http.FileServer(http.Dir("./static/vendor")))
+	http.Handle("/vendor/", http.StripPrefix("/vendor/", vendor))
+
+	js := noDirListing(http.FileServer(http.Dir("./static/js")))
+	http.Handle("/js/", http.StripPrefix("/js/", js))
+
+	http.Handle("/data/", http.StripPrefix("/data/", http.FileServer(http.Dir("./out"))))
+
+	http.Handle("/", http.StripPrefix("/", http.FileServer(http.Dir("./static"))))
+	/*uploads := noDirListing(http.FileServer(http.Dir("./public/uploads")))
+	http.Handle("/uploads/", http.StripPrefix("/uploads/", uploads))*/
+
 	fmt.Println(settings)
 	http.HandleFunc("/do/", doHandler)
 
@@ -199,4 +215,14 @@ func main() {
 
 	fmt.Println("Starting server...")
 	http.ListenAndServe(":80", nil)
+}
+
+func noDirListing(h http.Handler) http.HandlerFunc {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if strings.HasSuffix(r.URL.Path, "/") || r.URL.Path == "" {
+			http.NotFound(w, r)
+			return
+		}
+		h.ServeHTTP(w, r)
+	})
 }
