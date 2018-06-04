@@ -57,7 +57,7 @@ func camCapture() {
 func writeSensorsToLog() {
 	for range tickerSensors.C {
 		dir, _ := GetTargetPathByDate()
-		AppendLineToLog(dir+"sensors.log", GenerateTimestamp()+" t "+strconv.FormatFloat(temp, 'f', 2, 64)+" h "+strconv.FormatFloat(hum, 'f', 2, 64)+"\r\n")
+		AppendLineToLog(dir+"sensors.log", GenerateTimestamp()+" t "+strconv.FormatFloat(temp, 'f', 1, 64)+" h "+strconv.FormatFloat(hum, 'f', 1, 64)+"\r\n")
 	}
 }
 
@@ -98,8 +98,14 @@ func mainDataHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Println(params.Path)
 
 	if params.Path == "/mainData" { // out t, h, states
-
-		fmt.Fprint(w, "60")
+		parameters := make(map[string]string)
+		parameters["temp_val"] = strconv.FormatFloat(temp, 'f', 1, 64)
+		parameters["hum_val"] = strconv.FormatFloat(hum, 'f', 1, 64)
+		parameters["light_state"] = BoolToString(worker.GetTargetLightState())
+		parameters["pump_state"] = BoolToString(worker.GetTargetPumpState())
+		parameters["fan_state"] = BoolToString(worker.GetTargetFanState())
+		jsonString, _ := json.Marshal(parameters)
+		fmt.Fprint(w, string(jsonString))
 		return
 	}
 

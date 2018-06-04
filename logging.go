@@ -57,7 +57,6 @@ func AppendLineToLog(filename, str string) error {
 func BoolToString(b bool) string {
 	if b == true {
 		return "true"
-	} else {
-		return "false"
 	}
+	return "false"
 }

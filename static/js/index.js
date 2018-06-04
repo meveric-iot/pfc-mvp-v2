@@ -3,7 +3,7 @@ var timer = 0;
 function DecTime() { 
     if (time > 0) {
         time--;
-        document.getElementById("clockdiv").innerHTML = 'До возвращения в автоматический режим: ' + time + ' сек';
+        document.getElementById("clockdiv").innerHTML = 'до возвращения в автоматический режим: ' + time + ' сек';
     }
     else {
         document.getElementById("clockdiv").innerHTML = '';
@@ -17,7 +17,7 @@ function restartCountdown(seconds) {
         clearInterval(timer); 
     } 
     time = seconds;  
-    document.getElementById("clockdiv").innerHTML = 'До возвращения в автоматический режим: ' + time + ' сек';
+    document.getElementById("clockdiv").innerHTML = 'до возвращения в автоматический режим: ' + time + ' сек';
     timer = setInterval(function() { 
         DecTime(); 
     }, 1000); 
@@ -158,11 +158,19 @@ function loadSystemSettings() {
 
 function loadMainStatus() {
   $.get("mainData", {}, function(result) {
-    var data = JSON.parse(result);
-    document.getElementById("temp_val").value = data.temp_val;
-    document.getElementById("hum_val").value = data.hum_val;
-    document.getElementById("light_state").value = data.light_state;
-    document.getElementById("pump_state").value = data.pump_state;
-    document.getElementById("fan_state").value = data.fan_state;
+    var data = JSON.parse(result, function(key, val){
+      if (val == "true") {
+        return "включен";
+      } else if (val == "false") {
+        return "выключен";
+      } else {
+        return val;
+      }
+    });
+    document.getElementById("temp_val").innerHTML = data.temp_val;
+    document.getElementById("hum_val").innerHTML = data.hum_val;
+    document.getElementById("light_state").innerHTML = data.light_state;
+    document.getElementById("pump_state").innerHTML = data.pump_state;
+    document.getElementById("fan_state").innerHTML = data.fan_state;
   });
 }
