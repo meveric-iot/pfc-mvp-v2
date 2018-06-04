@@ -7,7 +7,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
   <meta name="description" content="">
   <meta name="author" content="">
-  <title>SB Admin - Start Bootstrap Template</title>
+  <title>Personal Food Computer v1.1</title>
   <!-- Bootstrap core CSS-->
   <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
   <!-- Custom fonts for this template-->
@@ -21,7 +21,7 @@
 <body class="fixed-nav sticky-footer bg-dark" id="page-top" onLoad="initApp()">
   <!-- Navigation-->
   <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top" id="mainNav">
-    <a class="navbar-brand" href="/">Personal Food Computer v1.0</a>
+    <a class="navbar-brand" href="/">Food Computer v1.1</a>
     <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
@@ -94,7 +94,7 @@
                       </div>
                       <div class="row">
                           <div class="col">cвет: <label id="light_state">включен</label></div>
-                          <div class="col"></div>
+                          <div class="col"><label id="date_time">10:00 4.04.2018</label></div>
                       </div>
                        
                       <div id="clockdiv"></div>
@@ -110,7 +110,7 @@
                 <div class="card-header">
                   <i class="fa fa-area-chart"></i>Камера</div>
                 <div class="card-body">
-                  <img src="img.jpg" alt="загрузка..." class="img-fluid">
+                  <a href="data/"><img src="img.jpg?1" alt="загрузка..." class="img-fluid" id="camera_photo"></a>
                 </div>
               </div>
           </div>
@@ -123,7 +123,7 @@
             <div class="card-header">
               <i class="fa fa-area-chart"></i> График температуры</div>
             <div class="card-body">
-              <canvas id="myAreaChart" width="100%" height="50"></canvas>
+              <canvas id="mainAreaTemperatureChart" width="100%" height="50"></canvas>
             </div>
           </div>
           </div>
@@ -133,7 +133,7 @@
                   <div class="card-header">
                     <i class="fa fa-area-chart"></i> График влажности</div>
                   <div class="card-body">
-                    <canvas id="myAreaChart" width="100%" height="50"></canvas>
+                    <canvas id="mainAreaHumidityChart" width="100%" height="50"></canvas>
                   </div>
               </div>
           </div>
@@ -286,13 +286,11 @@
     <script src="vendor/jquery-easing/jquery.easing.min.js"></script>
     <!-- Page level plugin JavaScript-->
     <script src="vendor/chart.js/Chart.min.js"></script>
-    <script src="vendor/datatables/jquery.dataTables.js"></script>
+    <!--<script src="vendor/datatables/jquery.dataTables.js"></script>
     <script src="vendor/datatables/dataTables.bootstrap4.js"></script>
-    <!-- Custom scripts for all pages-->
+     Custom scripts for all pages-->
     <script src="js/sb-admin.min.js"></script>
     <!-- Custom scripts for this page-->
-    <script src="js/sb-admin-datatables.min.js"></script>
-    <script src="js/sb-admin-charts.min.js"></script>
     <script src="js/index.js"></script>
   </div>
 </body>

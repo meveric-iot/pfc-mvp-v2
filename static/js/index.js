@@ -1,5 +1,81 @@
 var time = 0;
 var timer = 0;
+
+
+
+function getDataAndShowGraph(url, elementId, label) {
+  $.get(url, {}, function(result) {
+    var data = JSON.parse(result);
+    var max_val = 0.0;
+    data.data.forEach(function(val) {
+      if (parseFloat(val) > max_val) {
+        max_val = parseFloat(val);
+      }
+    });
+
+    var ctx = document.getElementById(elementId);
+    var myLineChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: data.time,
+        datasets: [{
+          label: label,
+          lineTension: 0.3,
+          backgroundColor: "rgba(2,117,216,0.2)",
+          borderColor: "rgba(2,117,216,1)",
+          pointRadius: 5,
+          pointBackgroundColor: "rgba(2,117,216,1)",
+          pointBorderColor: "rgba(255,255,255,0.8)",
+          pointHoverRadius: 5,
+          pointHoverBackgroundColor: "rgba(2,117,216,1)",
+          pointHitRadius: 20,
+          pointBorderWidth: 2,
+          data: data.data
+        }],
+      },
+      options: {
+        scales: {
+          xAxes: [{
+            time: {
+              unit: 'time'
+            },
+            gridLines: {
+              display: false
+            },
+            ticks: {
+              maxTicksLimit: 7
+            }
+          }],
+          yAxes: [{
+            ticks: {
+              min: 0,
+              max: max_val,
+              maxTicksLimit: 5
+            },
+            gridLines: {
+              color: "rgba(0, 0, 0, .125)",
+            }
+          }],
+        },
+        legend: {
+          display: false
+        }
+      }
+    });
+
+
+  });
+
+}
+
+function updateGraphs() {
+  getDataAndShowGraph("/mainData/getGraphHumData", "mainAreaHumidityChart", "влажность");
+  getDataAndShowGraph("/mainData/getGraphTempData", "mainAreaTemperatureChart", "температура");
+}
+
+
+
+
 function DecTime() { 
     if (time > 0) {
         time--;
@@ -13,27 +89,34 @@ function DecTime() {
 }
 
 function restartCountdown(seconds) { 
-    if (timer != 0) { 
-        clearInterval(timer); 
-    } 
-    time = seconds;  
-    document.getElementById("clockdiv").innerHTML = 'до возвращения в автоматический режим: ' + time + ' сек';
-    timer = setInterval(function() { 
-        DecTime(); 
-    }, 1000); 
+  if (timer != 0) { 
+      clearInterval(timer); 
+  } 
+  time = seconds;  
+  document.getElementById("clockdiv").innerHTML = 'до возвращения в автоматический режим: ' + time + ' сек';
+  timer = setInterval(function() { 
+      DecTime(); 
+  }, 1000); 
 } 
 
 function sendRequestToMain(request) {
-          $.get("/mainData/"+request, {}, function(result) {
-            //alert(result);
-            restartCountdown(result);
-          });
+  $.get("/mainData/"+request, {}, function(result) {
+    if (result != "") { 
+      restartCountdown(result);
+    }
+  });
 }
 
 function initApp() {
+  loadMainStatus();
+  document.getElementById("camera_photo").src = "img.jpg?"+Math.random();
   setInterval(function() {
     loadMainStatus();
   }, 1000);
+  updateGraphs();
+  setInterval(function() {
+    updateGraphs();
+  }, 60000);
 }
 
 function hideAllPages() {
@@ -63,6 +146,12 @@ function shutdownComputer() { sendRequestToMain("shutdown"); }
 function toggleLight() { sendRequestToMain("toggleLight"); } 
 function togglePump() { sendRequestToMain("togglePump"); } 
 function toggleFan() { sendRequestToMain("toggleFan"); } 
+function updatePhoto() { 
+  $.get("/mainData/updatePhoto", {}, function(result) {
+    document.getElementById("camera_photo").src = "";
+    document.getElementById("camera_photo").src = "img.jpg?"+Math.random();
+  });
+} 
 
 function saveGrowingSettings() {
   var gSet = {
@@ -172,5 +261,6 @@ function loadMainStatus() {
     document.getElementById("light_state").innerHTML = data.light_state;
     document.getElementById("pump_state").innerHTML = data.pump_state;
     document.getElementById("fan_state").innerHTML = data.fan_state;
+    document.getElementById("date_time").innerHTML = data.date_time;
   });
 }

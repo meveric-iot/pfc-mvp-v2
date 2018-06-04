@@ -30,7 +30,7 @@ func tryTakePhoto(prv bool) bool {
 		timer = time.NewTimer(time.Millisecond * 990)
 
 		if prv == true {
-			exec.Command("/bin/sh", "-c", "sudo fswebcam -r 960x720 --jpeg 90 -D 1 /home/pi/go_exp/img.jpg").CombinedOutput()
+			exec.Command("/bin/sh", "-c", "sudo fswebcam -r 960x720 --jpeg 90 -D 1 /home/pi/go_exp/static/img.jpg").CombinedOutput()
 		} else {
 			exec.Command("/bin/sh", "-c", "sudo fswebcam -r 960x720 --jpeg 90 -D 1 "+dir+GenerateStringByCurrentTime()+".jpg").CombinedOutput()
 		}
@@ -44,6 +44,8 @@ func tryTakePhoto(prv bool) bool {
 
 func camCapture() {
 	for range tickerCam.C {
+		dir, _ := GetTargetPathByDate()
+		loadTempHumPointsFromLogFile(dir + "sensors.log")
 		if tryTakePhoto(false) == false {
 			if tryTakePhoto(false) == false {
 				if tryTakePhoto(false) == false {
@@ -94,8 +96,7 @@ func handlePeriphStates() {
 func mainDataHandler(w http.ResponseWriter, r *http.Request) {
 	params := r.URL
 	state := false
-	// add cutting params and extract cmd
-	fmt.Println(params.Path)
+	//fmt.Println(params.Path)
 
 	if params.Path == "/mainData" { // out t, h, states
 		parameters := make(map[string]string)
@@ -104,6 +105,8 @@ func mainDataHandler(w http.ResponseWriter, r *http.Request) {
 		parameters["light_state"] = BoolToString(worker.GetTargetLightState())
 		parameters["pump_state"] = BoolToString(worker.GetTargetPumpState())
 		parameters["fan_state"] = BoolToString(worker.GetTargetFanState())
+		current := time.Now()
+		parameters["date_time"] = fmt.Sprintf("%02d:%02d:%02d %02d.%02d.%04d", current.Hour(), current.Minute(), current.Second(), current.Day(), current.Month(), current.Year())
 		jsonString, _ := json.Marshal(parameters)
 		fmt.Fprint(w, string(jsonString))
 		return
@@ -122,18 +125,15 @@ func mainDataHandler(w http.ResponseWriter, r *http.Request) {
 		worker.SetFanStateManual(!state)
 		fmt.Fprint(w, "60")
 	} else if params.Path == "/mainData/getGraphHumData" {
-
-		fmt.Println("Pump off")
-
+		str := getCharHumDataJSONStr()
+		fmt.Fprint(w, str)
 	} else if params.Path == "/mainData/getGraphTempData" {
-
-		fmt.Println("Pump off")
+		str := getCharTempDataJSONStr()
+		fmt.Fprint(w, str)
 	} else if params.Path == "/mainData/shutdown" {
 		exec.Command("/bin/sh", "-c", "sudo shutdown 0").CombinedOutput()
 	} else if params.Path == "/mainData/updatePhoto" {
-		fmt.Println("Photo")
-		exec.Command("/bin/sh", "-c", "sudo rm /home/pi/go_exp/img.jpg").CombinedOutput()
-
+		//exec.Command("/bin/sh", "-c", "sudo rm /home/pi/go_exp/img.jpg").CombinedOutput()
 		if tryTakePhoto(true) == false {
 			if tryTakePhoto(true) == false {
 				if tryTakePhoto(true) == false {
@@ -141,6 +141,7 @@ func mainDataHandler(w http.ResponseWriter, r *http.Request) {
 				}
 			}
 		}
+		fmt.Fprint(w, "")
 	}
 }
 
@@ -150,7 +151,6 @@ func growingSettingsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if len(body) == 0 { // empty request, return settings in JSON
-		fmt.Println("nothing")
 		parameters := make(map[string]string)
 		parameters["valLightOnTime"] = settings["light_on_time"]
 		parameters["valLightOffTime"] = settings["light_off_time"]
@@ -185,7 +185,6 @@ func systemSettingsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if len(body) == 0 { // empty request, return settings in JSON
-		fmt.Println("nothing")
 		parameters := make(map[string]string)
 		parameters["valSsid"] = settings["ssid"]
 		parameters["valAPName"] = settings["ap_ssid"]
@@ -199,7 +198,6 @@ func systemSettingsHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		return
 	}
-
 	settings["ssid"] = t["valSsid"]
 	settings["ap_ssid"] = t["valAPName"]
 	settings["pass"] = t["valPass"]
@@ -230,6 +228,9 @@ func main() {
 
 	tickerSensors = time.NewTicker(1 * time.Minute)
 	go writeSensorsToLog()
+
+	dir, _ := GetTargetPathByDate()
+	loadTempHumPointsFromLogFile(dir + "sensors.log")
 
 	http.Handle("/data/", http.StripPrefix("/data/", http.FileServer(http.Dir("./out"))))
 	http.Handle("/", http.StripPrefix("/", http.FileServer(http.Dir("./static"))))
