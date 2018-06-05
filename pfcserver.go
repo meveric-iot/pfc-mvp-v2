@@ -205,6 +205,7 @@ func systemSettingsHandler(w http.ResponseWriter, r *http.Request) {
 	jsonString, _ := json.Marshal(settings)
 	worker.makeFromMap(settings)
 	saveSettings(&jsonString, "settings.txt")
+	wifiController.writeSettings(settings["ap_ssid"], "01234567", settings["ssid"], settings["pass"])
 }
 
 func main() {
@@ -217,6 +218,8 @@ func main() {
 		wifiController.initApPlusStationMode()
 	} else {
 		json.Unmarshal(tmp, &settings)
+		time.Sleep(time.Second * 5)
+		wifiController.writeSettings(settings["ap_ssid"], "01234567", settings["ssid"], settings["pass"])
 	}
 
 	periph.InitGpio()

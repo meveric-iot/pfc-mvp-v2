@@ -205,18 +205,48 @@ function loadGrowingSettings() {
   
 }
 
+function IsContainChars(str, chars) {
+  for (var i=0; i < str.length; i++) {
+    for (var j=0; j < chars.length; j++) {
+      if (str[i] == chars[j]) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+function isValidSSID(str) { 
+  if (str.length < 8 || str.length > 32) {
+    return false
+  }
+  if (IsContainChars(str, "~`@#$%^&*()=+/\\|[]{}:;\"<>_,?йцукенгшщзхъфывапролджэячсмитьбюЙЦУКЕНГШЩЗФЫВАПРОЛДЖЭЯЧСМИТЬБЮ")) {
+    return false;
+  }
+  return true;
+
+}
+function isValidWPA(str) { return /^[\u0020-\u007e\u00a0-\u00ff]*$/.test(str); }
+
+
 function saveSystemSettings() {
   var gSet = {
     valSsid: document.getElementById("valSsid").value,
     valPass: document.getElementById("valPass").value,
     valAPName: document.getElementById("valAPName").value
   };
+
+  if (!isValidSSID(gSet.valAPName)) {
+    alert("Ошибка в имени PFC (точки доступа), длина 8..32 символов, может содержать a..z, A..Z, 0..9, символы . -");
+    return 0;
+  }
+  
   if (gSet.valSsid == "") {
+    alert("Не задано имя сети!");
+    return 0;
     gSet.valSsid = document.getElementById("valSsid").placeholder;
   }
-  if (gSet.valPass == "") {
-    gSet.valPass = document.getElementById("valPass").placeholder;
-  }
+
   if (gSet.valAPName == "") {
     gSet.valAPName = document.getElementById("valAPName").placeholder;
   }
