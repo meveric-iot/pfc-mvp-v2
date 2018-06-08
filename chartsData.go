@@ -46,8 +46,23 @@ func loadTempHumPointsFromLogFile(filename string) error {
 	}
 	for i := 0; i < 29; i++ {
 		if each > 0 {
-			file.Seek(int64(each*int64(slen)), 1)
+			for j := int64(0); j < each; j++ {
+				_, err = reader.ReadString('\n')
+				if err != nil {
+					break
+				}
+			}
 		}
+		line, err = reader.ReadString('\n')
+		if err != nil {
+			break
+		}
+		if len(line) == slen-1 {
+			parseTempHumLogLine(line)
+		}
+	}
+
+	for err == nil {
 		line, err = reader.ReadString('\n')
 		if err != nil {
 			break
@@ -67,7 +82,7 @@ func loadTempHumPointsFromLogFile(filename string) error {
 func getCharTempDataJSONStr() string {
 	p := make(map[string][]string)
 	for _, elem := range data {
-		p["data"] = append(p["data"], elem[1])
+		p["data"] = append(p["data"], elem[2])
 		p["time"] = append(p["time"], elem[0])
 	}
 	jsonString, _ := json.Marshal(p)
@@ -77,7 +92,7 @@ func getCharTempDataJSONStr() string {
 func getCharHumDataJSONStr() string {
 	p := make(map[string][]string)
 	for _, elem := range data {
-		p["data"] = append(p["data"], elem[2])
+		p["data"] = append(p["data"], elem[1])
 		p["time"] = append(p["time"], elem[0])
 	}
 	jsonString, _ := json.Marshal(p)

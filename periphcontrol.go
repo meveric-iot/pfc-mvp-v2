@@ -57,7 +57,7 @@ func (p *PFCperiph) ReadHumTempSensor() (h, t float64) {
 	//output := "t=22.1\nh=40.5"
 	if err != nil {
 		os.Stderr.WriteString(err.Error())
-		return 40.0, 22.0
+		return 0.0, 0.0
 	} else {
 		s := string(output)
 		os.Stderr.WriteString(s)

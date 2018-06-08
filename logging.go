@@ -50,7 +50,14 @@ func AppendLineToLog(filename, str string) error {
 		return err
 	}
 	defer f.Close()
-	_, err = f.WriteString(str)
+	if str != "" {
+		if len(str) > 2 {
+			if str[len(str)-2:] != "\r\n" {
+				str += "\r\n"
+			}
+		}
+		_, err = f.WriteString(str)
+	}
 	return err
 }
 

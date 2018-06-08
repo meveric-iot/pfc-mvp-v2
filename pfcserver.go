@@ -8,6 +8,7 @@ import (
 	"os/exec"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -16,6 +17,7 @@ var worker PFC_settings
 var tickerCam, tickerSensors *time.Ticker
 var hum float64
 var temp float64
+var mutex *sync.Mutex
 
 func tryTakePhoto(prv bool) bool {
 	var timer *time.Timer
@@ -59,7 +61,9 @@ func camCapture() {
 func writeSensorsToLog() {
 	for range tickerSensors.C {
 		dir, _ := GetTargetPathByDate()
-		AppendLineToLog(dir+"sensors.log", GenerateTimestamp()+" t "+strconv.FormatFloat(temp, 'f', 1, 64)+" h "+strconv.FormatFloat(hum, 'f', 1, 64)+"\r\n")
+		mutex.Lock()
+		AppendLineToLog(dir+"sensors.log", GenerateTimestamp()+" t "+strconv.FormatFloat(temp, 'f', 1, 64)+" h "+strconv.FormatFloat(hum, 'f', 1, 64))
+		mutex.Unlock()
 	}
 }
 
@@ -73,20 +77,21 @@ func handlePeriphStates() {
 		dir, _ = GetTargetPathByDate()
 		h, t = periph.ReadHumTempSensor()
 		worker.UpdateFlags(h, t)
-		// Add Lock
+		mutex.Lock()
 		hum = h
 		temp = t
+		mutex.Unlock()
 		periph.SetLightState(worker.GetTargetLightState())
 		periph.SetPumpState(worker.GetTargetPumpState())
 		periph.SetFanState(worker.GetTargetFanState())
 		if worker.ReadLightSwitchedFlag() {
-			AppendLineToLog(dir+"switchings.log", GenerateTimestamp()+" LightEnabled -> "+BoolToString(worker.GetTargetLightState())+"\r\n")
+			AppendLineToLog(dir+"switchings.log", GenerateTimestamp()+" LightEnabled -> "+BoolToString(worker.GetTargetLightState()))
 		}
 		if worker.ReadPumpSwitchedFlag() {
-			AppendLineToLog(dir+"switchings.log", GenerateTimestamp()+" PumpEnabled  -> "+BoolToString(worker.GetTargetPumpState())+"\r\n")
+			AppendLineToLog(dir+"switchings.log", GenerateTimestamp()+" PumpEnabled  -> "+BoolToString(worker.GetTargetPumpState()))
 		}
 		if worker.ReadFanSwitchedFlag() {
-			AppendLineToLog(dir+"switchings.log", GenerateTimestamp()+" FanEnabled   -> "+BoolToString(worker.GetTargetFanState())+"\r\n")
+			AppendLineToLog(dir+"switchings.log", GenerateTimestamp()+" FanEnabled   -> "+BoolToString(worker.GetTargetFanState()))
 		}
 
 		time.Sleep(time.Millisecond * 500)
@@ -210,6 +215,7 @@ func systemSettingsHandler(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	var tmp []byte
+	mutex = &sync.Mutex{}
 
 	if readSettings(&tmp, "settings.txt") != nil {
 		fillSettingsDefault(&settings)
