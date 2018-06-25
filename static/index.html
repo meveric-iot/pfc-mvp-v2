@@ -21,7 +21,7 @@
 <body class="fixed-nav sticky-footer bg-dark" id="page-top" onLoad="initApp()">
   <!-- Navigation-->
   <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top" id="mainNav">
-    <a class="navbar-brand" href="/">Food Computer v1.1</a>
+    <a class="navbar-brand" href="/">Food Computer v1.2</a>
     <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
@@ -78,23 +78,21 @@
                   <i class="fa fa-area-chart"></i>Состояние системы</div>
                 <div class="card-body">
                     <div class="row">
-                      <div class="col"><button class="btn-block" onClick="toggleLight()" id="toggleLightBtn">свет on/off</button></div>
-                      <div class="col"><button class="btn-block" onClick="togglePump()">насос on/off</button></div>
-                      <div class="col"><button class="btn-block" onClick="toggleFan()">вентилятор on/off</button></div>
-                      <div class="col"><button class="btn-block" onClick="updatePhoto()">новое фото</button></div>
+                      <div class="col-lg-2"><button class="btn btn-block" onClick="toggleLight()" id="toggleLightBtn">свет on/off</button><br></div>
+                      <div class="col-lg-2"><button class="btn btn-block" onClick="togglePump()">насос on/off</button><br></div>
+                      <div class="col-lg-2"><button class="btn btn-block" onClick="toggleFan()">вентилятор on/off</button><br></div>
+                      <div class="col-lg-2"><button class="btn btn-block" onClick="toggleChiller()">охладитель on/off</button><br></div>
+                      <div class="col-lg-2"><button class="btn btn-block" onClick="updatePhoto()">новое фото</button><br></div>
                     </div><hr>
                     <div id="system_info">
                       <div class="row">
-                          <div class="col">температура: <label id="temp_val">20</label>*С</div>             
-                          <div class="col">влажность: <label id="hum_val">20</label>%</div> 
-                      </div>
-                      <div class="row">
-                          <div class="col">вентилятор: <label id="fan_state">включен</label></div>  
-                          <div class="col">насос: <label id="pump_state">включен</label></div> 
-                      </div>
-                      <div class="row">
-                          <div class="col">cвет: <label id="light_state">включен</label></div>
-                          <div class="col"><label id="date_time">10:00 4.04.2018</label></div>
+                          <div class="col-lg-2">cвет: <label id="light_state">включен</label></div>
+                          <div class="col-lg-2">насос: <label id="pump_state">включен</label></div> 
+                          <div class="col-lg-2">вентилятор: <label id="fan_state">включен</label></div>  
+                          <div class="col-lg-2">охладитель: <label id="chiller_state">включен</label></div>  
+                          <div class="col-lg-2"><label id="date_time">10:00 4.04.2018</label></div>
+                          <div class="col-lg-2">температура: <label id="temp_val">20</label>*С</div>             
+                          <div class="col-lg-2">влажность: <label id="hum_val">20</label>%</div>                  
                       </div>
                        
                       <div id="clockdiv"></div>
@@ -167,17 +165,28 @@
                         <div class="form-row">
                             <div class="col-md-6">
                               <label>Продолжительность работы насоса</label>
-                              <input class="form-control" id="valPumpOnTime" type="text" placeholder="00:10:00">
+                              <input class="form-control" id="valPumpOnTime" type="text" placeholder="00:00:05">
                             </div>
                             <div class="col-md-6">
                               <label>Продолжительность паузы насоса</label>
-                              <input class="form-control" id="valPumpPauseTime" type="text" placeholder="00:40:00">
+                              <input class="form-control" id="valPumpPauseTime" type="text" placeholder="06:00:00">
                             </div>
                           </div>  
                           <br>
+                          <div class="form-row">
+                              <div class="col-md-6">
+                                <label>Продолжительность работы вентилятора</label>
+                                <input class="form-control" id="valFanOnTime" type="text" placeholder="00:00:30">
+                              </div>
+                              <div class="col-md-6">
+                                <label>Продолжительность паузы вентилятора</label>
+                                <input class="form-control" id="valFanPauseTime" type="text" placeholder="00:30:00">
+                              </div>
+                            </div>  
+                            <br>
                           <div class="form-group">
-                              <label>Температура включения вентилятора</label>
-                              <input class="form-control" id="valFanOnThreshold" type="text" placeholder="22.0">
+                              <label>Температура включения охладителя</label>
+                              <input class="form-control" id="valChillerOnThreshold" type="text" placeholder="22.0">
                           </div>
                       </form>
                       <button class="btn btn-primary" onClick="saveGrowingSettings()">Сохранить</button>

@@ -16,6 +16,8 @@ type PFC_settings struct {
 	temperature_threshold float64
 	pump_on_time          uint32
 	pump_pause_time       uint32
+	fan_on_time           uint32
+	fan_pause_time        uint32
 	ssid                  string
 	pass                  string
 	ap_ssid               string
@@ -23,11 +25,14 @@ type PFC_settings struct {
 	fLightOn,
 	fPumpOn,
 	fPumpEnabled,
-	fFanOn bool
-	pumpNextTime int64
+	fChillerOn,
+	fFanOn,
+	fFanEnabled bool
+	pumpNextTime, fanNextTime int64
 	fLightSwitched,
 	fPumpSwitched,
-	fFanSwitched bool
+	fFanSwitched,
+	fChillerSwitched bool
 }
 
 func strToHHMMss(str string) time.Time {
@@ -48,10 +53,19 @@ func (s *PFC_settings) makeFromMap(cfg map[string]string) {
 	t1 := strToHHMMss(cfg["pump_on_time"])
 	t2 := strToHHMMss(cfg["pump_pause_time"])
 
+	t3 := strToHHMMss(cfg["fan_on_time"])
+	t4 := strToHHMMss(cfg["fan_pause_time"])
+
 	s.pump_on_time = uint32(t1.Hour()*3600 + t1.Minute()*60 + t1.Second())
 	s.pump_pause_time = uint32(t2.Hour()*3600 + t2.Minute()*60 + t2.Second())
+
+	s.fan_on_time = uint32(t3.Hour()*3600 + t3.Minute()*60 + t3.Second())
+	s.fan_pause_time = uint32(t4.Hour()*3600 + t4.Minute()*60 + t4.Second())
+
 	s.pumpNextTime = 0
+	s.fanNextTime = 0
 	s.fPumpEnabled = false
+	s.fFanEnabled = false
 
 	s.light_on_time = strToHHMMss(cfg["light_on_time"])
 	s.light_off_time = strToHHMMss(cfg["light_off_time"])
@@ -59,6 +73,7 @@ func (s *PFC_settings) makeFromMap(cfg map[string]string) {
 	s.fLightSwitched = false
 	s.fPumpSwitched = false
 	s.fFanSwitched = false
+	s.fChillerSwitched = false
 }
 
 func (s *PFC_settings) GetTargetLightState() bool {
@@ -71,6 +86,10 @@ func (s *PFC_settings) GetTargetPumpState() bool {
 
 func (s *PFC_settings) GetTargetFanState() bool {
 	return s.fFanOn
+}
+
+func (s *PFC_settings) GetTargetChillerState() bool {
+	return s.fChillerOn
 }
 
 func (s *PFC_settings) SetLightStateManual(state bool) {
@@ -97,6 +116,14 @@ func (s *PFC_settings) SetFanStateManual(state bool) {
 	s.fFanOn = state
 }
 
+func (s *PFC_settings) SetChillerStateManual(state bool) {
+	s.restartMModeTimer()
+	if s.fChillerOn != state {
+		s.fChillerSwitched = true
+	}
+	s.fChillerOn = state
+}
+
 func (s *PFC_settings) ReadLightSwitchedFlag() bool {
 	if s.fLightSwitched == true {
 		s.fLightSwitched = false
@@ -116,6 +143,14 @@ func (s *PFC_settings) ReadPumpSwitchedFlag() bool {
 func (s *PFC_settings) ReadFanSwitchedFlag() bool {
 	if s.fFanSwitched == true {
 		s.fFanSwitched = false
+		return true
+	}
+	return false
+}
+
+func (s *PFC_settings) ReadChillerSwitchedFlag() bool {
+	if s.fChillerSwitched == true {
+		s.fChillerSwitched = false
 		return true
 	}
 	return false
@@ -179,16 +214,36 @@ func (s *PFC_settings) UpdateFlags(h, t float64) {
 			}
 		}
 
-		if t > s.temperature_threshold {
-			if s.fFanOn != true {
-				s.fFanSwitched = true
-			}
+		if s.fanNextTime == 0 {
 			s.fFanOn = true
+			s.fFanEnabled = true
+			s.fanNextTime = time_now.Unix() + int64(s.fan_on_time)
 		} else {
-			if s.fFanOn != false {
-				s.fFanSwitched = true
+			if time_now.Unix() >= s.fanNextTime {
+				if s.fFanEnabled {
+					s.fFanSwitched = true
+					s.fFanEnabled = false
+					s.fanNextTime = time_now.Unix() + int64(s.fan_pause_time)
+					s.fFanOn = false
+				} else {
+					s.fFanSwitched = true
+					s.fFanEnabled = true
+					s.fanNextTime = time_now.Unix() + int64(s.fan_on_time)
+					s.fFanOn = true
+				}
 			}
-			s.fFanOn = false
+		}
+
+		if t > s.temperature_threshold {
+			if s.fChillerOn != true {
+				s.fChillerSwitched = true
+			}
+			s.fChillerOn = true
+		} else {
+			if s.fChillerOn != false {
+				s.fChillerSwitched = true
+			}
+			s.fChillerOn = false
 		}
 	}
 

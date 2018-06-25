@@ -113,7 +113,7 @@ nohook wpa_supplicant
 
 	dnsmasqConf := []byte(`# Delays sending DHCPOFFER and proxydhcp replies for at least the specified number of seconds.
 dhcp-mac=set:client_is_a_pi,B8:27:EB:*:*:*
-dhcp-reply-delay=tag:client_is_a_pi,2
+#dhcp-reply-delay=tag:client_is_a_pi,2
 #AutoHotspot config
 interface=wlan0
 bind-dynamic 

@@ -146,6 +146,7 @@ function shutdownComputer() { sendRequestToMain("shutdown"); }
 function toggleLight() { sendRequestToMain("toggleLight"); } 
 function togglePump() { sendRequestToMain("togglePump"); } 
 function toggleFan() { sendRequestToMain("toggleFan"); } 
+function toggleChiller() { sendRequestToMain("toggleChiller"); } 
 function updatePhoto() { 
   $.get("/mainData/updatePhoto", {}, function(result) {
     document.getElementById("camera_photo").src = "";
@@ -159,7 +160,9 @@ function saveGrowingSettings() {
     valLightOffTime: document.getElementById("valLightOffTime").value,
     valPumpOnTime: document.getElementById("valPumpOnTime").value,
     valPumpPauseTime: document.getElementById("valPumpPauseTime").value,
-    valFanOnThreshold: document.getElementById("valFanOnThreshold").value
+    valFanOnTime: document.getElementById("valFanOnTime").value,
+    valFanPauseTime: document.getElementById("valFanPauseTime").value,
+    valChillerOnThreshold: document.getElementById("valChillerOnThreshold").value
   };
   if (gSet.valLightOnTime == "") {
     gSet.valLightOnTime = document.getElementById("valLightOnTime").placeholder;
@@ -173,8 +176,14 @@ function saveGrowingSettings() {
   if (gSet.valPumpPauseTime == "") {
     gSet.valPumpPauseTime = document.getElementById("valPumpPauseTime").placeholder;
   }
-  if (gSet.valFanOnThreshold == "") {
-    gSet.valFanOnThreshold = document.getElementById("valFanOnThreshold").placeholder;
+  if (gSet.valFanOnTime == "") {
+    gSet.valFanOnTime = document.getElementById("valFanOnTime").placeholder;
+  }
+  if (gSet.valFanPauseTime == "") {
+    gSet.valFanPauseTime = document.getElementById("valFanPauseTime").placeholder;
+  }
+  if (gSet.valChillerOnThreshold == "") {
+    gSet.valChillerOnThreshold = document.getElementById("valChillerOnThreshold").placeholder;
   }
   //alert(JSON.stringify(gSet));
   $.ajax({
@@ -198,8 +207,10 @@ function loadGrowingSettings() {
     document.getElementById("valLightOnTime").value = data.valLightOnTime;         
     document.getElementById("valLightOffTime").value = data.valLightOffTime; 
     document.getElementById("valPumpOnTime").value = data.valPumpOnTime;
-    document.getElementById("valFanOnThreshold").value = data.valFanOnThreshold;
+    document.getElementById("valChillerOnThreshold").value = data.valChillerOnThreshold;
     document.getElementById("valPumpPauseTime").value = data.valPumpPauseTime;
+    document.getElementById("valFanOnTime").value = data.valFanOnTime;
+    document.getElementById("valFanPauseTime").value = data.valFanPauseTime;
     showGrowingSettingsPage();
   });
   
@@ -291,6 +302,7 @@ function loadMainStatus() {
     document.getElementById("light_state").innerHTML = data.light_state;
     document.getElementById("pump_state").innerHTML = data.pump_state;
     document.getElementById("fan_state").innerHTML = data.fan_state;
+    document.getElementById("chiller_state").innerHTML = data.chiller_state;
     document.getElementById("date_time").innerHTML = data.date_time;
   });
 }

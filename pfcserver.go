@@ -84,6 +84,7 @@ func handlePeriphStates() {
 		periph.SetLightState(worker.GetTargetLightState())
 		periph.SetPumpState(worker.GetTargetPumpState())
 		periph.SetFanState(worker.GetTargetFanState())
+		periph.SetChillerState(worker.GetTargetChillerState())
 		if worker.ReadLightSwitchedFlag() {
 			AppendLineToLog(dir+"switchings.log", GenerateTimestamp()+" LightEnabled -> "+BoolToString(worker.GetTargetLightState()))
 		}
@@ -92,6 +93,9 @@ func handlePeriphStates() {
 		}
 		if worker.ReadFanSwitchedFlag() {
 			AppendLineToLog(dir+"switchings.log", GenerateTimestamp()+" FanEnabled   -> "+BoolToString(worker.GetTargetFanState()))
+		}
+		if worker.ReadChillerSwitchedFlag() {
+			AppendLineToLog(dir+"switchings.log", GenerateTimestamp()+" ChillerEnabled   -> "+BoolToString(worker.GetTargetChillerState()))
 		}
 
 		time.Sleep(time.Millisecond * 500)
@@ -110,6 +114,7 @@ func mainDataHandler(w http.ResponseWriter, r *http.Request) {
 		parameters["light_state"] = BoolToString(worker.GetTargetLightState())
 		parameters["pump_state"] = BoolToString(worker.GetTargetPumpState())
 		parameters["fan_state"] = BoolToString(worker.GetTargetFanState())
+		parameters["chiller_state"] = BoolToString(worker.GetTargetChillerState())
 		current := time.Now()
 		parameters["date_time"] = fmt.Sprintf("%02d:%02d:%02d %02d.%02d.%04d", current.Hour(), current.Minute(), current.Second(), current.Day(), current.Month(), current.Year())
 		jsonString, _ := json.Marshal(parameters)
@@ -128,6 +133,10 @@ func mainDataHandler(w http.ResponseWriter, r *http.Request) {
 	} else if params.Path == "/mainData/toggleFan" {
 		state = worker.GetTargetFanState()
 		worker.SetFanStateManual(!state)
+		fmt.Fprint(w, "60")
+	} else if params.Path == "/mainData/toggleChiller" {
+		state = worker.GetTargetChillerState()
+		worker.SetChillerStateManual(!state)
 		fmt.Fprint(w, "60")
 	} else if params.Path == "/mainData/getGraphHumData" {
 		str := getCharHumDataJSONStr()
@@ -161,7 +170,9 @@ func growingSettingsHandler(w http.ResponseWriter, r *http.Request) {
 		parameters["valLightOffTime"] = settings["light_off_time"]
 		parameters["valPumpPauseTime"] = settings["pump_pause_time"]
 		parameters["valPumpOnTime"] = settings["pump_on_time"]
-		parameters["valFanOnThreshold"] = settings["temperature_threshold"]
+		parameters["valFanPauseTime"] = settings["fan_pause_time"]
+		parameters["valFanOnTime"] = settings["fan_on_time"]
+		parameters["valChillerOnThreshold"] = settings["temperature_threshold"]
 		jsonString, _ := json.Marshal(parameters)
 		fmt.Fprint(w, string(jsonString))
 		return
@@ -176,7 +187,9 @@ func growingSettingsHandler(w http.ResponseWriter, r *http.Request) {
 	settings["light_off_time"] = t["valLightOffTime"]
 	settings["pump_on_time"] = t["valPumpOnTime"]
 	settings["pump_pause_time"] = t["valPumpPauseTime"]
-	settings["temperature_threshold"] = t["valFanOnThreshold"]
+	settings["fan_on_time"] = t["valFanOnTime"]
+	settings["fan_pause_time"] = t["valFanPauseTime"]
+	settings["temperature_threshold"] = t["valChillerOnThreshold"]
 
 	jsonString, _ := json.Marshal(settings)
 	worker.makeFromMap(settings)

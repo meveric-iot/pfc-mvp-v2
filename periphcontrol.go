@@ -5,10 +5,12 @@ import (
 	"os/exec"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type PFCperiph struct {
 	fanState,
+	chillerState,
 	lightState,
 	pumpState bool
 }
@@ -17,16 +19,29 @@ var periph PFCperiph
 
 func (p *PFCperiph) InitGpio() {
 	exec.Command("/bin/sh", "-c", "gpio mode 0 out").CombinedOutput()
+	time.Sleep(time.Millisecond * 200)
+	exec.Command("/bin/sh", "-c", "gpio write 0 1").CombinedOutput()
+	time.Sleep(time.Millisecond * 800)
 	exec.Command("/bin/sh", "-c", "gpio mode 2 out").CombinedOutput()
+	time.Sleep(time.Millisecond * 200)
+	exec.Command("/bin/sh", "-c", "gpio write 2 1").CombinedOutput()
+	time.Sleep(time.Millisecond * 800)
 	exec.Command("/bin/sh", "-c", "gpio mode 3 out").CombinedOutput()
+	time.Sleep(time.Millisecond * 200)
+	exec.Command("/bin/sh", "-c", "gpio write 3 1").CombinedOutput()
+	time.Sleep(time.Millisecond * 800)
+	exec.Command("/bin/sh", "-c", "gpio mode 12 out").CombinedOutput()
+	time.Sleep(time.Millisecond * 200)
+	exec.Command("/bin/sh", "-c", "gpio write 12 1").CombinedOutput()
+	time.Sleep(time.Millisecond * 800)
 }
 
 func (p *PFCperiph) SetLightState(state bool) {
 	var s string
 	if state == true {
-		s = "1"
-	} else {
 		s = "0"
+	} else {
+		s = "1"
 	}
 	exec.Command("/bin/sh", "-c", "gpio write 0 "+s).CombinedOutput()
 }
@@ -34,9 +49,9 @@ func (p *PFCperiph) SetLightState(state bool) {
 func (p *PFCperiph) SetFanState(state bool) {
 	var s string
 	if state == true {
-		s = "1"
-	} else {
 		s = "0"
+	} else {
+		s = "1"
 	}
 	exec.Command("/bin/sh", "-c", "gpio write 2 "+s).CombinedOutput()
 }
@@ -44,11 +59,21 @@ func (p *PFCperiph) SetFanState(state bool) {
 func (p *PFCperiph) SetPumpState(state bool) {
 	var s string
 	if state == true {
-		s = "1"
-	} else {
 		s = "0"
+	} else {
+		s = "1"
 	}
 	exec.Command("/bin/sh", "-c", "gpio write 3 "+s).CombinedOutput()
+}
+
+func (p *PFCperiph) SetChillerState(state bool) {
+	var s string
+	if state == true {
+		s = "0"
+	} else {
+		s = "1"
+	}
+	exec.Command("/bin/sh", "-c", "gpio write 12 "+s).CombinedOutput()
 }
 
 func (p *PFCperiph) ReadHumTempSensor() (h, t float64) {
