@@ -167,6 +167,10 @@ func (s *PFC_settings) restartMModeTimer() {
 		<-timerMM.C
 		timerMM = nil
 		fMM = false
+		s.fFanSwitched = true
+		s.fPumpSwitched = true
+		s.fChillerSwitched = true
+		s.fLightSwitched = true
 		fmt.Println("Restore automatic mode")
 	}()
 }

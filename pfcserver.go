@@ -81,21 +81,34 @@ func handlePeriphStates() {
 		hum = h
 		temp = t
 		mutex.Unlock()
-		periph.SetLightState(worker.GetTargetLightState())
-		periph.SetPumpState(worker.GetTargetPumpState())
-		periph.SetFanState(worker.GetTargetFanState())
-		periph.SetChillerState(worker.GetTargetChillerState())
+
 		if worker.ReadLightSwitchedFlag() {
+			periph.SetLightState(worker.GetTargetLightState())
 			AppendLineToLog(dir+"switchings.log", GenerateTimestamp()+" LightEnabled -> "+BoolToString(worker.GetTargetLightState()))
+			if worker.GetTargetLightState() == true {
+				time.Sleep(time.Millisecond * 800)
+			}
 		}
 		if worker.ReadPumpSwitchedFlag() {
+			periph.SetPumpState(worker.GetTargetPumpState())
 			AppendLineToLog(dir+"switchings.log", GenerateTimestamp()+" PumpEnabled  -> "+BoolToString(worker.GetTargetPumpState()))
+			if worker.GetTargetPumpState() == true {
+				time.Sleep(time.Millisecond * 800)
+			}
 		}
 		if worker.ReadFanSwitchedFlag() {
+			periph.SetFanState(worker.GetTargetFanState())
 			AppendLineToLog(dir+"switchings.log", GenerateTimestamp()+" FanEnabled   -> "+BoolToString(worker.GetTargetFanState()))
+			if worker.GetTargetFanState() == true {
+				time.Sleep(time.Millisecond * 800)
+			}
 		}
 		if worker.ReadChillerSwitchedFlag() {
+			periph.SetChillerState(worker.GetTargetChillerState())
 			AppendLineToLog(dir+"switchings.log", GenerateTimestamp()+" ChillerEnabled   -> "+BoolToString(worker.GetTargetChillerState()))
+			if worker.GetTargetChillerState() == true {
+				time.Sleep(time.Millisecond * 800)
+			}
 		}
 
 		time.Sleep(time.Millisecond * 500)
